@@ -62,6 +62,8 @@ func readAndPrintTorrent(filePath string) error {
 		fmt.Printf("Private: %d\n", *bencodeTorrent.Info.Private)
 	}
 
+	bencodeTorrent.Announce = "http://localhost:18312/tracker"
+
 	marshaledInfo, err := bencode.Marshal(bencodeTorrent.Info)
 	if err != nil {
 		return err
@@ -69,15 +71,33 @@ func readAndPrintTorrent(filePath string) error {
 	hash := sha1.Sum(marshaledInfo)
 	fmt.Printf("Info Hash (SHA1): %x\n", hash)
 
+	exportTorrentFile("/tmp/test2.torrent", bencodeTorrent)
+	return nil
+}
+
+func exportTorrentFile(exportPath string, torrent *BencodeTorrent) error {
+	outFile, err := os.Create(exportPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	encoder := bencode.NewEncoder(outFile)
+	err = encoder.Encode(torrent)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Exported modified torrent file to %s\n", exportPath)
 	return nil
 }
 
 func main() {
-	// filePath := "/Users/GS/Downloads/test.torrent"
-	//
-	// err := readAndPrintTorrent(filePath)
-	// if err != nil {
-	// 	fmt.Printf("读取种子文件出错: %v\n", err)
-	// }
+	filePath := "/Users/GS/Downloads/test.torrent"
+
+	err := readAndPrintTorrent(filePath)
+	if err != nil {
+		fmt.Printf("读取种子文件出错: %v\n", err)
+	}
 	tracker.Init()
 }
